@@ -9,6 +9,7 @@ import numpy as np
 
 from miniscope_io.sdcard import SDLayout, SDConfig, DataHeader
 from miniscope_io.exceptions import InvalidSDException
+from miniscope_io.loggers import init_logger
 
 
 class SDCard:
@@ -29,7 +30,6 @@ class SDCard:
             self,
             drive: Union[str, Path],
             layout: SDLayout
-
         ):
 
         self.drive = Path(drive).resolve()
@@ -51,13 +51,7 @@ class SDCard:
         `frame` to seek back to those positions. Assigning to `frame` works without caching position, but
         has to manually iterate through each frame.
         """
-
-
-
-        # this doesn't seem to be true anymore? but the WRITE_KEYs are still in
-        # both the firmware and reading code, just unused?
-        #if not self.check_valid():
-        #    raise InvalidSDException(f"The SD card at path {str(self.drive)} does not have the correct WRITEKEYs in its header!")
+        self.logger = init_logger(self)
 
     # --------------------------------------------------
     # Properties
@@ -141,6 +135,8 @@ class SDCard:
         if self._f is not None:
             raise RuntimeError("Cant enter context, and open the file twice!")
 
+        self.logger.debug('entered context')
+
         # init private attrs
         # create an empty frame to hold our data!
         self._array = np.zeros(
@@ -187,6 +183,7 @@ class SDCard:
                 for k, v in self.layout.buffer.dict().items()
                 if v is not None
             })
+        self.logger.debug(header)
         return header
 
     def _n_frame_blocks(self, header: DataHeader) -> int:
@@ -233,7 +230,7 @@ class SDCard:
         Trim or pad an array to match an expected size
         """
         if data.shape[0] != expected_size:
-            warnings.warn(
+            self.logger.warning(
                 f"Expected buffer data length: {expected_size}, got data with shape {data.shape}. Padding to expected length")
 
             # trim if too long

@@ -10,10 +10,12 @@ packages = [{include = "miniscope_io"}]
 python = "^3.9"
 opencv-python = "^4.7.0.72"
 numpy = "^1.25.0"
-pydantic = "^1.10.9"
+pydantic = { version="^1.10.9", extras = ["dotenv"] }
 ipywidgets = "^8.0.6"
 jupyter = "^1.0.0"
 matplotlib = "^3.7.1"
+rich = "^13.4.2"
+parse = "^1.19.1"
 
 
 [tool.poetry.group.dev.dependencies]

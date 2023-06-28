@@ -6,6 +6,8 @@ for consuming code to use a consistent, introspectable API
 from typing import Optional
 from pydantic import BaseModel
 
+from miniscope_io.loggers import init_logger
+
 class SectorConfig(BaseModel):
     """
     Configuration of sector layout on the SD card.
@@ -40,6 +42,8 @@ class SectorConfig(BaseModel):
     """
     The size of an individual sector
     """
+
+
 
     def __getattr__(self, item:str) -> int:
         """
