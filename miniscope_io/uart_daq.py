@@ -6,6 +6,7 @@ import coloredlogs, logging
 from datetime import datetime
 import numpy as np
 import cv2
+import matplotlib.pyplot as plt
 import sys
 import time
 
@@ -44,7 +45,7 @@ class uart_daq:
         while 1:
             # read UART data until preamble and put into queue
             log_uart_buffer = bytearray(serial_port.read_until(self.preamble))
-            serial_buffer_queue.put(log_uart_buffer)            
+            serial_buffer_queue.put(log_uart_buffer)
 
         time.sleep(1) #time for ending other process
         serial_port.close()
@@ -214,16 +215,44 @@ class uart_daq:
         p_buffer_to_frame.start()
         p_format_frame.start()
 
+        imagearray_plot = imagearray.get()
+        image = imagearray_plot.reshape(self.frame_width, self.frame_height)
+        #np.savetxt('imagearray.csv', imagearray, delimiter=',')
+        #np.savetxt('image.csv', image, delimiter=',')
+
+        fg = plt.figure()
+        ax = fg.gca()
+
+        myobj = ax.imshow(image, cmap='gray')
+
+        try:
+            plt.draw(), plt.pause(1e-3)
+        except Exception as e:
+            print(e)
+
+        keyInput = False
+
+        # event listener 
+        def press(event):
+            global keyInput
+            if event.key == '1':
+                keyInput = True
+
         while 1: # Seems like GUI functions should be on main thread in scripts but not sure what it means for this case
             if imagearray.qsize() > 0:
                 imagearray_plot = imagearray.get()
                 image = imagearray_plot.reshape(self.frame_width, self.frame_height)
                 #np.savetxt('imagearray.csv', imagearray, delimiter=',')
-                #np.savetxt('image.csv', image, delimiter=',')
-                cv2.imshow("image", image)
-            if cv2.waitKey(1) == 27:
-                cv2.destroyAllWindows()
-                cv2.waitKey(100)
+                #np.savetxt('image.csv', image, delimiter=',')]
+                print(image)
+                myobj.set_data(image)
+                plt.draw(), plt.pause(1e-3)
+
+                #cv2.imshow("image", image)
+            if keyInput == True:
+            #if cv2.waitKey(1) == 27:
+                #cv2.destroyAllWindows()
+                #cv2.waitKey(100)
                 break # esc to quit
         print('End capture')
 
@@ -275,6 +304,7 @@ def main():
     except (ValueError, IndexError) as e:
         print(e)
         sys.exit(1)
+
 
 
     daq_inst = uart_daq()
