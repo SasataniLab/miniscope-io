@@ -14,6 +14,7 @@ import numpy as np
 import serial
 from bitstring import Array, BitArray, Bits
 from pydantic import BaseModel
+import csv
 
 HAVE_OK = False
 ok_error = None
@@ -98,7 +99,7 @@ class stream_daq:
         self,
         frame_width: int = 304,
         frame_height: int = 304,
-        preamble: bytes = b"\x12\x34\x56",
+        preamble: bytes = b"\x12\x34",
         header_fmt: MetadataHeaderFormat = MetadataHeaderFormat(),
         header_len: int = 11,
         LSB: bool = True,
@@ -250,6 +251,12 @@ class stream_daq:
         print("Close serial port")
         sys.exit(1)
 
+    def _flip_byte(self, b):
+        b = ((b & 0xf0) >> 4) | ((b & 0x0f) << 4)
+        b = ((b & 0xcc) >> 2) | ((b & 0x33) << 2)
+        b = ((b & 0xaa) >> 1) | ((b & 0x55) << 1)
+        return b
+
     def _fpga_recv(
         self,
         serial_buffer_queue: multiprocessing.Queue,
@@ -302,8 +309,16 @@ class stream_daq:
         file.setFormatter(fileformat)
         locallogs.addHandler(file)
         coloredlogs.install(level=logging.INFO, logger=locallogs)
+
+        filename = datetime.now().strftime("./bytearray%m_%d_%H_%M_%S.csv")
+
         # set up fpga devices
+        BIT_FILE = "./devices/USBInterface-8mhz-3v3-dbg.bit"
+        BIT_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), BIT_FILE))
+
         dev = okDev()
+        dev.uploadBit(BIT_FILE)
+
         dev.setWire(0x00, 0b0010)
         time.sleep(0.01)
         dev.setWire(0x00, 0b0)
@@ -319,12 +334,28 @@ class stream_daq:
             buf = dev.readData(read_length)
             dat = BitArray(buf)
             cur_buffer = cur_buffer + dat
+            with open(filename, 'a', newline='') as f:
+                writer = csv.writer(f)
+                byte_list = [hex(self._flip_byte(b)) for b in cur_buffer.tobytes()]
+                writer.writerow(byte_list)
             pre_pos = list(cur_buffer.findall(pre))
             for buf_start, buf_stop in zip(pre_pos[:-1], pre_pos[1:]):
                 if not pre_first:
                     buf_start, buf_stop = buf_start + len(pre), buf_stop + len(pre)
                 serial_buffer_queue.put(cur_buffer[buf_start:buf_stop].tobytes())
-            cur_buffer = cur_buffer[pre_pos[-1] :]
+                '''
+                with open(filename, 'a', newline='') as f:
+                    writer = csv.writer(f)
+                    if self.LSB:
+                        byte_array = cur_buffer[buf_start:buf_stop].tobytes()[::-1]
+                        #byte_array = cur_buffer[buf_start:buf_stop].tobytes()
+                    else:
+                        byte_array = cur_buffer[buf_start:buf_stop].tobytes()
+                    byte_list = [hex(b) for b in byte_array]
+                    writer.writerow(byte_list)
+                '''
+            if len(pre_pos) > 0:
+                cur_buffer = cur_buffer[pre_pos[-1] :]
 
     def _buffer_to_frame(
         self,
