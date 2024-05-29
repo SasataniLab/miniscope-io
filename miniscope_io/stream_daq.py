@@ -99,7 +99,7 @@ class stream_daq:
         self,
         frame_width: int = 304,
         frame_height: int = 304,
-        preamble: bytes = b"\x12\x34\x56",
+        preamble: bytes = b"\x12\x34",
         header_fmt: MetadataHeaderFormat = MetadataHeaderFormat(),
         header_len: int = 11,
         LSB: bool = True,
