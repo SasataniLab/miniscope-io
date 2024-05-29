@@ -313,7 +313,8 @@ class stream_daq:
         filename = datetime.now().strftime("./bytearray%m_%d_%H_%M_%S.csv")
 
         # set up fpga devices
-        BIT_FILE = "./devices/USBInterface-8mhz-3v3-dbg.bit"
+        BIT_FILE = "./devices/USBInterface-6mhz-3v3-INVERSE.bit"
+        #BIT_FILE = "./devices/USBInterface-8mhz-3v3-dbg.bit"
         BIT_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), BIT_FILE))
 
         dev = okDev()
