@@ -99,7 +99,7 @@ class stream_daq:
         self,
         frame_width: int = 304,
         frame_height: int = 304,
-        preamble: bytes = b"\x12\x34",
+        preamble: bytes = b"\x12\x34\x56",
         header_fmt: MetadataHeaderFormat = MetadataHeaderFormat(),
         header_len: int = 11,
         LSB: bool = True,
@@ -313,6 +313,7 @@ class stream_daq:
         filename = datetime.now().strftime("./bytearray%m_%d_%H_%M_%S.csv")
 
         # set up fpga devices
+        #BIT_FILE = "./devices/USBInterface-6mhz-3v3-dbg.bit"
         BIT_FILE = "./devices/USBInterface-6mhz-3v3-INVERSE.bit"
         #BIT_FILE = "./devices/USBInterface-8mhz-3v3-dbg.bit"
         BIT_FILE = os.path.abspath(os.path.join(os.path.dirname(__file__), BIT_FILE))
