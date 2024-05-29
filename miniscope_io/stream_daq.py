@@ -99,7 +99,7 @@ class stream_daq:
         self,
         frame_width: int = 304,
         frame_height: int = 304,
-        preamble: bytes = b"\x12\x34",
+        preamble: bytes = b"\x12\x34\x56",
         header_fmt: MetadataHeaderFormat = MetadataHeaderFormat(),
         header_len: int = 11,
         LSB: bool = True,
@@ -334,10 +334,12 @@ class stream_daq:
             buf = dev.readData(read_length)
             dat = BitArray(buf)
             cur_buffer = cur_buffer + dat
+            '''
             with open(filename, 'a', newline='') as f:
                 writer = csv.writer(f)
                 byte_list = [hex(self._flip_byte(b)) for b in cur_buffer.tobytes()]
                 writer.writerow(byte_list)
+            '''
             pre_pos = list(cur_buffer.findall(pre))
             for buf_start, buf_stop in zip(pre_pos[:-1], pre_pos[1:]):
                 if not pre_first:
