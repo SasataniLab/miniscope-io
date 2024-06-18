@@ -624,13 +624,12 @@ def main():
             sys.exit(1)
         #daq_inst.capture(source="uart", comport=comport, baudrate=baudrate)
         daq_inst.capture(source="uart", config = daqConfig)
-
+    if daqConfig.mode == "RAW_REPLAY":
+        daq_inst.capture(source="fpga", config = daqConfig)
     if daqConfig.device == "OK":
         if not HAVE_OK:
             raise ImportError('Requested Opal Kelly DAQ, but okDAQ could not be imported, got exception: {ok_error}')
-
         daq_inst.capture(source="fpga", config = daqConfig)
-
 
 if __name__ == "__main__":
     main()
